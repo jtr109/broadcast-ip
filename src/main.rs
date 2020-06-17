@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate clap;
-use chrono::{Local, SecondsFormat};
 use clap::App;
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
 use reqwest::Response;
@@ -21,10 +20,6 @@ const PRIVATE_TOKEN: &str = "PRIVATE-TOKEN";
 fn ifconfig(interface: &str) -> String {
     let output = Command::new("ifconfig").arg(interface).output().unwrap();
     String::from_utf8(output.stdout).unwrap()
-}
-
-fn now() -> String {
-    Local::now().to_rfc3339_opts(SecondsFormat::Millis, false)
 }
 
 async fn new_issue(
@@ -65,7 +60,7 @@ async fn main() {
     let issue_api = matches.value_of("api").unwrap();
     let private_token = matches.value_of("token").unwrap();
 
-    let title = format!("[{}] Network Config of Raspberry Pi", now());
+    let title = "Network Config of Raspberry Pi";
     let description = format!("```\n{}\n```", ifconfig("wlan0"));
 
     let response = new_issue(issue_api, &title, &description, private_token).await;
