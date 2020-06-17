@@ -1,0 +1,19 @@
+name: broadcast-ip
+version: "1.0"
+author: Ryan Li <conbas2019@gmail.com>
+about: Broadcast IP Configure
+args:
+    - interface:
+        help: Name of the network interface
+        short: i
+        long: interface
+        takes_value: true
+        value_name: INTERFACE
+    - api:
+        help: "GitLab issue API. Example: https://gitlab.com/api/v4/projects/5388/issue"
+        required: true
+        index: 1
+    - token:
+        help: GitLab private access token
+        required: true
+        index: 2

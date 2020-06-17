@@ -1,4 +1,7 @@
+#[macro_use]
+extern crate clap;
 use chrono::{Local, SecondsFormat};
+use clap::App;
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
 use reqwest::Response;
 use serde_json::Value;
@@ -16,8 +19,8 @@ const FRAGMENT: &AsciiSet = &CONTROLS
     .add(b'+');
 const PRIVATE_TOKEN: &str = "PRIVATE-TOKEN";
 
-fn ifconfig() -> String {
-    let output = Command::new("ifconfig").output().unwrap();
+fn ifconfig(interface: &str) -> String {
+    let output = Command::new("ifconfig").arg(interface).output().unwrap();
     String::from_utf8(output.stdout).unwrap()
 }
 
@@ -26,14 +29,13 @@ fn now() -> String {
 }
 
 async fn new_issue(
-    issue_api: String,
-    title: String,
-    description: String,
-    private_token: String,
+    issue_api: &str,
+    title: &str,
+    description: &str,
+    private_token: &str,
 ) -> Response {
     let encoded_title: String = utf8_percent_encode(&title, FRAGMENT).collect();
     let encoded_description: String = utf8_percent_encode(&description, FRAGMENT).collect();
-    // let encoded_description = "hello".to_string();
     let mut url = reqwest::Url::parse(&issue_api).unwrap();
     url.set_query(Some(&format!(
         "title={}&description={}",
@@ -59,16 +61,15 @@ fn web_url_from_response_content(content: &str) -> String {
 async fn main() {
     env_logger::init();
 
-    let issue_api = format!(
-        "{}/api/v4/projects/{}/issues",
-        env::var("BROADCAST_IP_GITLAB").unwrap(),
-        env::var("BROADCAST_IP_PROJECT_ID").unwrap(),
-    );
-    let private_token = env::var("BROADCAST_IP_TOKEN").unwrap();
-    let title = format!("[{}] Network Config of Raspberry Pi", now());
-    let description = format!("```\n{}\n```", ifconfig());
+    let yaml = load_yaml!("cli.yml");
+    let matches = App::from_yaml(yaml).get_matches();
+    let issue_api = matches.value_of("api").unwrap();
+    let private_token = matches.value_of("token").unwrap();
 
-    let response = new_issue(issue_api, title, description, private_token).await;
+    let title = format!("[{}] Network Config of Raspberry Pi", now());
+    let description = format!("```\n{}\n```", ifconfig("wlan0"));
+
+    let response = new_issue(issue_api, &title, &description, private_token).await;
     let status = response.status();
     let content = response.text().await.unwrap();
     log::info!(
