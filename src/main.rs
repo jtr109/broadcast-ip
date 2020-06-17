@@ -5,7 +5,6 @@ use clap::App;
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
 use reqwest::Response;
 use serde_json::Value;
-use std::env;
 use std::process::Command;
 
 /// https://url.spec.whatwg.org/#fragment-percent-encode-set
@@ -59,7 +58,7 @@ fn web_url_from_response_content(content: &str) -> String {
 
 #[tokio::main]
 async fn main() {
-    env_logger::init();
+    env_logger::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
@@ -73,7 +72,7 @@ async fn main() {
     let status = response.status();
     let content = response.text().await.unwrap();
     log::info!(
-        "[{}] {}",
+        "Get response from GitLab with status code {}. New issue url: {}.",
         status.as_str(),
         web_url_from_response_content(&content),
     );
