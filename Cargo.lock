@@ -54,6 +54,7 @@ dependencies = [
  "log",
  "percent-encoding",
  "reqwest",
+ "serde_json",
  "tokio",
 ]
 

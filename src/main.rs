@@ -1,6 +1,7 @@
 use chrono::{Local, SecondsFormat};
 use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS};
 use reqwest::Response;
+use serde_json::Value;
 use std::env;
 use std::process::Command;
 
@@ -47,6 +48,13 @@ async fn new_issue(
         .unwrap()
 }
 
+fn web_url_from_response_content(content: &str) -> String {
+    if let Ok(v) = serde_json::from_str::<Value>(content) {
+        return v["web_url"].to_string();
+    }
+    content.to_string()
+}
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
@@ -59,10 +67,13 @@ async fn main() {
     let private_token = env::var("BROADCAST_IP_TOKEN").unwrap();
     let title = format!("[{}] Network Config of Raspberry Pi", now());
     let description = format!("```\n{}\n```", ifconfig());
+
     let response = new_issue(issue_api, title, description, private_token).await;
+    let status = response.status();
+    let content = response.text().await.unwrap();
     log::info!(
         "[{}] {}",
-        response.status().as_str(),
-        response.text().await.unwrap()
+        status.as_str(),
+        web_url_from_response_content(&content),
     );
 }
