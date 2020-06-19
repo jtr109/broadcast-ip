@@ -1,5 +1,5 @@
 [package]
-name = "broadcast-ip"
+name = "broadcast-command"
 version = "0.1.0"
 authors = ["Ryan Li <conbas2019@gmail.com>"]
 edition = "2018"
