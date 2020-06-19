@@ -17,8 +17,11 @@ const FRAGMENT: &AsciiSet = &CONTROLS
     .add(b'+');
 const PRIVATE_TOKEN: &str = "PRIVATE-TOKEN";
 
-fn ifconfig(interface: &str) -> String {
-    let output = Command::new("ifconfig").arg(interface).output().unwrap();
+fn execute(command: &str) -> String {
+    let mut fragment: Vec<&str> = command.split(" ").collect();
+    let mut c = Command::new(fragment.remove(0));
+    c.args(&fragment);
+    let output = c.output().unwrap();
     String::from_utf8(output.stdout).unwrap()
 }
 
@@ -59,9 +62,10 @@ async fn main() {
     let matches = App::from_yaml(yaml).get_matches();
     let issue_api = matches.value_of("api").unwrap();
     let private_token = matches.value_of("token").unwrap();
+    let command = matches.value_of("command").unwrap();
 
     let title = "Network Config of Raspberry Pi";
-    let description = format!("```\n{}\n```", ifconfig("wlan0"));
+    let description = format!("```\n{}\n```", execute(command));
 
     let response = new_issue(issue_api, &title, &description, private_token).await;
     let status = response.status();
